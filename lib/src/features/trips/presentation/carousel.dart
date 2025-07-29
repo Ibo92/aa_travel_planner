@@ -1,0 +1,127 @@
+//Gemeinsame Komponenten ,  (Wiederverwendbare Bildergalerie)
+import 'package:aa_travel_planner/src/features/favorites/data/favorites_repository.dart';
+import 'package:aa_travel_planner/src/features/trips/domain/destination.dart';
+import 'package:aa_travel_planner/src/features/trips/domain/trip.dart';
+import 'package:aa_travel_planner/src/features/trips/presentation/destination_details_screen.dart';
+import 'package:aa_travel_planner/src/features/trips/presentation/trip_details_screen.dart';
+import 'package:flutter/material.dart';
+
+class Carousel extends StatelessWidget {
+  final FavoritesRepository favoritesRepository;
+  final List<Trip> trips;
+  final Trip? secretTip;
+  final Destination? favoriteDestination;
+
+  const Carousel({
+    super.key,
+    required this.favoritesRepository,
+    required this.trips,
+    this.secretTip,
+    this.favoriteDestination,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 250,
+      child: PageView(
+        controller: PageController(viewportFraction: 0.8),
+        children: [
+          if (secretTip != null)
+            CarouselItem(trip: secretTip!, label: 'Secret Tip!'),
+          if (favoriteDestination != null)
+            CarouselItem(
+                favoritesRepository: favoritesRepository,
+                destination: favoriteDestination!,
+                label: 'From Your Favorites'),
+          ...trips.map((trip) => CarouselItem(trip: trip)),
+        ],
+      ),
+    );
+  }
+}
+
+class CarouselItem extends StatelessWidget {
+  final FavoritesRepository? favoritesRepository;
+  final Trip? trip;
+  final Destination? destination;
+  final String? label;
+
+  const CarouselItem({
+    super.key,
+    this.trip,
+    this.destination,
+    this.label,
+    this.favoritesRepository,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final String imageUrl =
+        trip != null ? trip!.destination.imageUrl : destination!.imageUrl;
+    final String title =
+        trip != null ? trip!.destination.name : destination!.name;
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => trip == null
+            ? DestinationDetailsScreen(
+                destination: destination!,
+                favoritesRepository: favoritesRepository!,
+              )
+            : TripDetailsScreen(trip: trip!),
+      )),
+      child: Stack(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15.0),
+              image: DecorationImage(
+                image: AssetImage("assets/images/$imageUrl"),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          if (label != null)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  label!,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    blurRadius: 10.0,
+                    color: Colors.black,
+                    offset: Offset(3, 3),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
